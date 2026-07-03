@@ -1,227 +1,82 @@
 # OmegaHack
 
-Plataforma multiagente para gestion de PQRSD de la Alcaldia de Medellin.
+> CAROL: a pipeline of agents that receives, de-identifies, classifies, and legally clocks a Colombian city hall's citizen complaints.
 
-Este repositorio es un monorepo con:
-- aplicaciones web para atencion ciudadana y operacion interna,
-- paquetes TypeScript de dominio (clasificacion, plazos, RAG, privacidad, busqueda),
-- edge functions en Supabase para procesos backend,
-- integracion con n8n para intake publico y automatizaciones.
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat&logo=typescript&logoColor=white)
+![Turborepo](https://img.shields.io/badge/Turborepo-EF4444?style=flat&logo=turborepo&logoColor=white)
+![Next.js 14](https://img.shields.io/badge/Next.js%2014-000000?style=flat&logo=nextdotjs&logoColor=white)
+![Supabase](https://img.shields.io/badge/Supabase-3FCF8E?style=flat&logo=supabase&logoColor=white)
+![Postgres + pgvector](https://img.shields.io/badge/Postgres%20%2B%20pgvector-4169E1?style=flat&logo=postgresql&logoColor=white)
+![Claude](https://img.shields.io/badge/Claude-D97757?style=flat&logo=anthropic&logoColor=white)
+![Vitest](https://img.shields.io/badge/tested%20with-Vitest-6E9F18?style=flat&logo=vitest&logoColor=white)
+![Status](https://img.shields.io/badge/status-hackathon%20build-c8542a?style=flat)
+[![Portfolio](https://img.shields.io/badge/portfolio-pablomanjarres.com-c8542a?style=flat)](https://pablomanjarres.com/portfolio/projects/omegahack)
 
-Actualizado segun el estado del codigo al **2026-04-19**.
+Colombian public entities are legally required to answer every citizen PQRSD (petition, complaint, claim, suggestion, or report) inside strict business-day deadlines set by Ley 1755/2015, and to protect personal data under Ley 1581/2012. Miss a deadline and the citizen can file a *tutela*. CAROL is the backend that keeps that from happening. Complaints arrive through any channel, a chain of agents validates and scrubs them, a classifier routes each one to the right secretaría, and a legal-deadline engine tracks every clock in Colombian business days. Built for the OmegaHack 2026 challenge (Alcaldía de Medellín).
 
-## Arquitectura en 30 segundos
+## Highlights
 
-1. El ciudadano radica una PQRSD (portal web y/o webhook de n8n).
-2. El intake agent valida, deduplica, clasifica y asigna prioridad/plazo legal.
-3. Se persiste en Supabase Postgres (con RLS por tenant).
-4. Se indexa para busqueda semantica (pgvector + nella como capa preferida).
-5. Los equipos internos operan desde Workbench y Secretaria.
+- **Legal deadline engine.** Colombian business-day math with Ley Emiliani movable holidays, Easter-derived dates, per-tenant suspensions, and the Ley 1755/2015 rule that an extension cannot exceed 2× the original term. Zero runtime dependencies, fully offline, **407 tests at 100% line coverage**, including a fast-check property test at 10,000 iterations.
+- **Multi-agent intake pipeline.** Validate the schema, compute a SHA-256 `source_hash` for idempotent dedup, classify with Claude, preserve text in three forms (`raw` / `display` / `llm`) while redacting PII into `llm_text`, derive validity against municipal-competence gates, then summarize, tag, and cluster into a problem group. The run emits a structured intake event, and a Postgres trigger mirrors every `pqr_events` row into an append-only `pqr_audit` log.
+- **Structured classification.** A Claude 3.5 Sonnet classifier turns free-text complaints into one of 6 PQRSD types, 26 official secretaría codes, a comuna (1–16) or corregimiento, namespaced tags, and signals like a 0–1 `tutela_risk_score`.
+- **PII by law.** `@omega/habeas-data` sorts every field into four Ley 1581/2012 sensitivity levels (public / semiprivate / private / sensitive), and only the PII-free `llm_text` ever reaches a model.
+- **Public transparency with k-anonymity.** Comuna density maps (Leaflet) and secretaría SLA rankings (Recharts) built from aggregate views. Any bucket with fewer than 5 complaints is suppressed before it leaves the server (k≥5).
+- **Tenant isolation in the database.** Every business table carries `tenant_id` under RLS. Three role-scoped Postgres clients (`app_operational`, `app_qa_reader`, service-role) issue `SET ROLE` on connect, so queries can only touch their tenant's rows.
 
-## Estructura del monorepo
+## How it works
 
-```text
-.
-|- apps/
-|  |- landing/      # Portal ciudadano (TanStack Start + Vite)
-|  |- web/          # Front publico Next.js
-|  |- workbench/    # Consola interna juridica Next.js
-|  '- secretaria/   # Vista operativa por dependencia Next.js
-|- packages/
-|  |- classifier/
-|  |- db/
-|  |- deadline-engine/
-|  |- habeas-data/
-|  |- intake-agent/
-|  |- problem-groups/
-|  |- rag/
-|  |- search/
-|  |- tags/
-|  |- config-eslint/
-|  '- config-ts/
-|- services/
-|  '- edge-functions/
-|     |- intake-agent/
-|     |- pqr-nella-indexer/
-|     |- qa-ingest/
-|     '- reembed-pqr/
-|- supabase/
-|- docs/
-|- tests/
-|  '- rls/
-|- scripts/
-`- fixtures/
+Turborepo monorepo: four frontends, eleven shared TypeScript packages, four Supabase edge functions (Deno), one Postgres with pgvector and RLS.
+
+```
+apps/
+  landing      CAROL citizen portal (Vite + TanStack Router + React 19): radicar, seguimiento por radicado (MED-YYYYMMDD-XXXXXX)
+  web          public "transparencia" dashboards (Next.js 14, Leaflet, Recharts, k-anonymity)
+  workbench    legal queue: bandeja, PQR detail, problem groups, auditoría
+  secretaria   sectoral + director view per secretaría
+packages/
+  intake-agent    orchestrator: validate → source_hash → classify → format-preserve/redact → validity → resumen → tags → group
+  classifier      Claude PQRSD classifier (tipo, secretaría, comuna, tags, señales)
+  deadline-engine Colombian business-day deadline math (407 tests, 100% lines)
+  habeas-data     PII classification + redaction (Ley 1581/2012)
+  problem-groups  cosine-similarity clustering, flags "hot" clusters by member volume in a rolling window
+  rag             heading-aware chunking + hybrid (vector + FTS) retriever, 1024-dim embeddings
+  search · tags · db · config-ts · config-eslint
+services/edge-functions/   intake-agent · pqr-nella-indexer · qa-ingest · reembed-pqr
 ```
 
-## Apps
+An alternate n8n + Gemini intake path (see `docs/n8n.md`) is documented to converge on the same tables as the TypeScript pipeline: `public.pqr` plus a `public.pqr_events` audit row.
 
-| App | Stack | Proposito | Comando |
-| --- | --- | --- | --- |
-| `@omega/landing` | TanStack Start + Vite + React 19 | Portal ciudadano y radicacion PQRSD (incluye modo demo si no hay webhook) | `pnpm --filter @omega/landing dev` |
-| `@omega/web` | Next.js 14 + React 18 | Front web publico/transparencia | `pnpm --filter @omega/web dev` (puerto 3000) |
-| `@omega/workbench` | Next.js 14 + React 18 | Consola interna (cola juridica, operacion) | `pnpm --filter @omega/workbench dev` (puerto 3001) |
-| `@omega/secretaria` | Next.js 14 + React 18 | Vista sectorial por secretaria | `pnpm --filter @omega/secretaria dev` (puerto 3002) |
+## Tech stack
 
-## Paquetes clave
+The citizen portal runs on Vite 7 + TanStack Router + React 19; the three dashboards are Next.js 14 + React 18. Shared across the repo: TypeScript, Turborepo, Tailwind CSS. Data sits on Supabase (Postgres + pgvector + Row-Level Security) with Deno edge functions. Claude 3.5 Sonnet (Anthropic) classifies; Azure `nella-embeddings` (1024-dim) powers retrieval. Tests run on Vitest + fast-check.
 
-| Paquete | Responsabilidad |
-| --- | --- |
-| `@omega/intake-agent` | Pipeline de ingesta: validacion, deduplicacion, bounce rules, clasificacion y eventos. |
-| `@omega/classifier` | Clasificacion semantica (tipo PQR, secretaria, comuna, tags, senales auxiliares). |
-| `@omega/deadline-engine` | Calculo de plazos habiles Colombia (Ley 1755, Emiliani, suspensiones). |
-| `@omega/habeas-data` | Redaccion y controles de PII para cumplimiento de datos personales. |
-| `@omega/problem-groups` | Agrupacion de casos similares por embedding + contexto. |
-| `@omega/rag` | Chunking, retrieval hibrido (nella/pgvector/FTS) y renderer de corpus. |
-| `@omega/search` | Busqueda y filtros de PQRs. |
-| `@omega/db` | Fabrica de clientes operativos con roles (`app_operational`, `app_qa_reader`, `service_role`). |
-| `@omega/tags` | Taxonomias y utilidades de etiquetado. |
-
-## Requisitos
-
-- Node.js >= 20
-- pnpm >= 10
-- Supabase CLI >= 2.90
-- (Opcional) Deno para pruebas locales de edge functions
-
-## Setup rapido
-
-### 1. Instalar dependencias
+## Getting started
 
 ```bash
 pnpm install
+cp .env.example .env    # fill in Supabase, Anthropic, and role-scoped Postgres URLs
+
+pnpm dev                # run every app via Turborepo
+# or a single surface:
+pnpm --filter @omega/landing dev      # citizen portal
+pnpm --filter @omega/web dev          # transparencia   (:3000)
+pnpm --filter @omega/workbench dev    # legal queue      (:3001)
+pnpm --filter @omega/secretaria dev   # sectoral view    (:3002)
+
+pnpm test                                   # turbo run test
+pnpm --filter @omega/deadline-engine test   # 407 legal-deadline tests
 ```
 
-### 2. Configurar variables de entorno
+Minimal `.env` (placeholders only, never commit real values):
 
-```bash
-cp .env.example .env
-cp apps/web/.env.example apps/web/.env.local
-cp apps/workbench/.env.example apps/workbench/.env.local
-cp apps/secretaria/.env.example apps/secretaria/.env.local
+```env
+SUPABASE_URL=https://<ref>.supabase.co
+SUPABASE_ANON_KEY=<anon-key>
+SUPABASE_SERVICE_ROLE_KEY=<service-role-key>
+DATABASE_URL_OPERATIONAL=postgresql://<user>:<pass>@<host>:5432/postgres
+ANTHROPIC_API_KEY=sk-ant-...
 ```
 
-Notas:
-- `apps/landing` usa `envDir` en la raiz, por lo que lee variables desde `.env`.
-- Para conectar landing con n8n debes definir `VITE_N8N_WEBHOOK_BASE_URL` en `.env`.
-- Si esa variable no existe, landing radica en modo demo local.
+---
 
-### 3. Enlazar Supabase remoto
-
-```bash
-supabase login
-SUPABASE_DB_PASSWORD=<db-pwd> supabase link --project-ref <project-ref>
-```
-
-### 4. Sincronizar esquema/tipos
-
-```bash
-pnpm db:push
-pnpm db:types
-pnpm db:diff
-```
-
-## Desarrollo
-
-### Levantar todo
-
-```bash
-pnpm dev
-```
-
-### Levantar solo un app
-
-```bash
-pnpm --filter @omega/landing dev
-pnpm --filter @omega/web dev
-pnpm --filter @omega/workbench dev
-pnpm --filter @omega/secretaria dev
-```
-
-## Calidad y pruebas
-
-```bash
-pnpm typecheck
-pnpm lint
-pnpm test
-pnpm test:rls
-```
-
-Comandos utiles por paquete:
-- `pnpm --filter @omega/classifier eval`
-- `pnpm --filter @omega/deadline-engine test:coverage`
-- `pnpm --filter @omega/deadline-engine generate:golden`
-
-## Edge functions (Supabase)
-
-Funciones actuales:
-- `intake-agent`
-- `pqr-nella-indexer`
-- `qa-ingest`
-- `reembed-pqr`
-
-Deploy:
-
-```bash
-supabase functions deploy intake-agent --project-ref <project-ref>
-supabase functions deploy pqr-nella-indexer --project-ref <project-ref>
-supabase functions deploy qa-ingest --project-ref <project-ref>
-supabase functions deploy reembed-pqr --project-ref <project-ref>
-```
-
-Pruebas locales disponibles:
-
-```bash
-cd services/edge-functions/qa-ingest && deno task test
-cd services/edge-functions/reembed-pqr && deno task test
-```
-
-## n8n y pipeline de intake
-
-- El webhook principal del intake vive en n8n (`POST /webhook/pqrs/intake`).
-- Landing envia a ese webhook cuando `VITE_N8N_WEBHOOK_BASE_URL` esta configurado.
-- El workflow persiste en Supabase y puede disparar indexacion nella.
-
-Referencia operacional: [docs/n8n.md](docs/n8n.md)
-
-## Seguridad y datos
-
-- Modelo multi-tenant con RLS estricto por `tenant_id`.
-- Separacion de roles de BD:
-  - `app_operational`: negocio diario (`public.*`)
-  - `app_qa_reader`: solo lectura de `qa_bank.*`
-  - `service_role`: procesos backend (edge functions/jobs)
-- `qa_bank` esta aislado por grants + RLS.
-
-Referencias:
-- [docs/supabase/rls.md](docs/supabase/rls.md)
-- [docs/qa-bank.md](docs/qa-bank.md)
-
-## CI
-
-GitHub Actions ejecuta:
-- instalacion con `pnpm install --frozen-lockfile`
-- `typecheck`
-- `lint`
-- `build`
-
-Workflow: [.github/workflows/ci.yml](.github/workflows/ci.yml)
-
-## Documentacion recomendada
-
-- [docs/setup.md](docs/setup.md)
-- [docs/arquitectura.md](docs/arquitectura.md)
-- [docs/desarrollo.md](docs/desarrollo.md)
-- [docs/n8n.md](docs/n8n.md)
-- [docs/nella-indexing.md](docs/nella-indexing.md)
-- [docs/qa-bank.md](docs/qa-bank.md)
-- [docs/supabase/README.md](docs/supabase/README.md)
-
-## Notas para colaboradores
-
-- Usa `pnpm` (no npm/yarn) para mantener lockfile consistente.
-- Evita hardcodear secretos; usa `.env` y secrets de Supabase/n8n.
-- Si cambias esquema de BD, actualiza tipos con `pnpm db:types`.
-- Si agregas una tabla sensible, valida cobertura de RLS y pruebas en `tests/rls`.
-
-## Uso de IAs
-Para el desarrollo de esta propuesta utilizamos únicamente herramientas en sus versiones gratuitas o con beneficios académicos para estudiantes. Entre ellas se encuentran ChatGPT como apoyo para ideación, redacción y estructuración de procesos; Gemini API para estudiantes para pruebas y automatizaciones con inteligencia artificial; n8n en su versión gratuita para la orquestación de flujos de trabajo; y Lovable en su plan gratuito para la construcción rápida de interfaces y prototipos.
+Built for **OmegaHack 2026**, Alcaldía de Medellín. Part of [pablomanjarres.com/portfolio](https://pablomanjarres.com/portfolio/projects/omegahack).
