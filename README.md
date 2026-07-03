@@ -1,4 +1,4 @@
-<p align="center"><a href="https://pablo-oss.vercel.app/omegahack"><img src=".github/banner.png" alt="OmegaHack / CAROL" width="100%" /></a></p>
+<p align="center"><a href="https://pablomanjarres.com/oss/omegahack"><img src=".github/banner.png" alt="OmegaHack / CAROL" width="100%" /></a></p>
 
 <h1 align="center">CAROL</h1>
 
@@ -21,7 +21,7 @@
   <a href="#license"><img src="https://img.shields.io/badge/License-MIT-22C55E.svg" alt="MIT License" /></a>
   <a href="https://omega-landing-zeta.vercel.app"><img src="https://img.shields.io/badge/status-v1.0_pilot-6366F1" alt="Status: v1.0 pilot" /></a>
   <a href="https://pablomanjarres.com/portfolio/projects/omegahack"><img src="https://img.shields.io/badge/Portfolio-write--up-FF7043?logo=readme&logoColor=white" alt="Portfolio write-up" /></a>
-  <a href="https://pablo-oss.vercel.app/omegahack"><img src="https://img.shields.io/badge/Landing-pablo--oss-000000?logo=vercel&logoColor=white" alt="Landing page" /></a>
+  <a href="https://pablomanjarres.com/oss/omegahack"><img src="https://img.shields.io/badge/Landing-pablo--oss-000000?logo=vercel&logoColor=white" alt="Landing page" /></a>
 </p>
 
 <p align="center">
@@ -201,7 +201,7 @@ MIT.
 ---
 
 <p align="center">
-  <a href="https://pablo-oss.vercel.app/omegahack">Landing</a> ·
+  <a href="https://pablomanjarres.com/oss/omegahack">Landing</a> ·
   <a href="https://pablomanjarres.com/portfolio/projects/omegahack">Portfolio write-up</a> ·
   Built by <a href="https://pablomanjarres.com">Pablo Manjarres</a>
 </p>
