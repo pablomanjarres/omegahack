@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Reveal } from "./motion";
 
 const FEATURES: { tag: string; title: string; body: string; icon: ReactNode }[] = [
   {
@@ -75,23 +76,28 @@ export function Features() {
     <section id="capacidades" className="relative py-24 md:py-32">
       <div className="mx-auto max-w-6xl px-6">
         <div className="mx-auto max-w-2xl text-center">
-          <div className="font-mono text-[11px] uppercase tracking-[0.2em] text-primary">
-            // capacidades
-          </div>
-          <h2 className="mt-3 text-balance text-4xl font-semibold leading-tight tracking-tight md:text-5xl">
+          <Reveal className="eyebrow">// capacidades</Reveal>
+          <Reveal
+            as="h2"
+            delay={60}
+            className="mt-3 text-balance text-display font-semibold leading-tight tracking-tight"
+          >
             Todo lo que su jurídica necesita,{" "}
             <span className="font-serif-italic text-primary">sin tickets perdidos.</span>
-          </h2>
-          <p className="mt-4 text-muted-foreground">
+          </Reveal>
+          <Reveal as="p" delay={120} className="mt-4 text-muted-foreground">
             Seis capacidades que reemplazan hojas de cálculo, correos sueltos y reuniones de
             seguimiento.
-          </p>
+          </Reveal>
         </div>
 
         <div className="mt-14 grid grid-cols-1 gap-px overflow-hidden rounded-2xl border border-hairline bg-hairline md:grid-cols-2 lg:grid-cols-3">
-          {FEATURES.map((f) => (
-            <div
+          {FEATURES.map((f, i) => (
+            <Reveal
               key={f.tag}
+              as="div"
+              y={16}
+              delay={(i % 3) * 90}
               className="group relative bg-surface p-7 transition-colors hover:bg-surface-elevated"
             >
               <div className="flex items-center gap-3">
@@ -122,7 +128,7 @@ export function Features() {
                     "radial-gradient(400px 200px at 0% 0%, color-mix(in oklab, var(--primary) 8%, transparent), transparent)",
                 }}
               />
-            </div>
+            </Reveal>
           ))}
         </div>
       </div>

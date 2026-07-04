@@ -1,9 +1,21 @@
 import { Link } from "@tanstack/react-router";
+import { useScrolled } from "./motion";
 
 export function SiteHeader() {
+  const scrolled = useScrolled(6);
   return (
-    <header className="fixed left-4 right-4 top-4 z-50 mx-auto max-w-6xl">
-      <div className="glass flex items-center justify-between rounded-2xl px-4 py-2.5 shadow-card">
+    <header
+      className={`fixed left-4 right-4 top-4 z-50 mx-auto max-w-6xl transition-all duration-500 ${
+        scrolled ? "max-w-5xl" : "max-w-6xl"
+      }`}
+    >
+      <div
+        className={`glass flex items-center justify-between rounded-2xl px-4 shadow-card transition-all duration-500 ${
+          scrolled
+            ? "border-primary/15 py-2 shadow-glow"
+            : "py-2.5"
+        }`}
+      >
         <Link to="/" className="flex items-center gap-2">
           <span className="grid h-7 w-7 place-items-center rounded-md bg-primary text-primary-foreground">
             <svg

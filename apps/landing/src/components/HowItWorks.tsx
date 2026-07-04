@@ -1,3 +1,5 @@
+import { Reveal } from "./motion";
+
 const STEPS = [
   {
     n: "01",
@@ -30,20 +32,24 @@ export function HowItWorks() {
     <section id="como-funciona" className="relative py-24 md:py-32">
       <div className="mx-auto max-w-6xl px-6">
         <div className="mx-auto max-w-2xl text-center">
-          <div className="font-mono text-[11px] uppercase tracking-[0.2em] text-primary">
-            // cómo funciona
-          </div>
-          <h2 className="mt-3 text-balance text-4xl font-semibold tracking-tight md:text-5xl">
+          <Reveal className="eyebrow">// cómo funciona</Reveal>
+          <Reveal
+            as="h2"
+            delay={60}
+            className="mt-3 text-balance text-display font-semibold tracking-tight"
+          >
             De radicación a respuesta,{" "}
             <span className="font-serif-italic text-primary">en cuatro pasos.</span>
-          </h2>
+          </Reveal>
         </div>
 
         <div className="mt-14 grid grid-cols-1 gap-4 md:grid-cols-4">
           {STEPS.map((s, i) => (
-            <div
+            <Reveal
               key={s.n}
-              className="relative rounded-2xl border border-hairline bg-surface/60 p-6"
+              as="div"
+              delay={i * 90}
+              className="sheen relative rounded-2xl border border-hairline bg-surface/60 p-6"
             >
               <div className="flex items-center justify-between">
                 <span className="font-mono text-[11px] tracking-[0.2em] text-primary">{s.n}</span>
@@ -68,7 +74,7 @@ export function HowItWorks() {
               <div className="mt-4 rounded-lg border border-hairline bg-background/40 px-3 py-2 font-mono text-[11px] text-foreground/80">
                 <span className="text-primary">{">"}</span> {s.mono}
               </div>
-            </div>
+            </Reveal>
           ))}
         </div>
       </div>

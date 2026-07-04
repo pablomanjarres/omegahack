@@ -32,18 +32,21 @@ export const Route = createFileRoute("/")({
 
 function Landing() {
   return (
-    <div className="grain min-h-screen bg-background text-foreground">
-      <SiteHeader />
-      <main id="producto">
-        <Hero />
-        <Compare />
-        <Features />
-        <HowItWorks />
-        <Transparency />
-        <Architecture />
-        <Faq />
-      </main>
-      <SiteFooter />
+    <div className="grain relative min-h-screen overflow-hidden bg-background text-foreground">
+      <div className="aurora" aria-hidden />
+      <div className="relative z-10">
+        <SiteHeader />
+        <main id="producto">
+          <Hero />
+          <Compare />
+          <Features />
+          <HowItWorks />
+          <Transparency />
+          <Architecture />
+          <Faq />
+        </main>
+        <SiteFooter />
+      </div>
     </div>
   );
 }
