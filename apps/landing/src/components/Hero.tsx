@@ -1,4 +1,5 @@
 import { DashboardMock } from "./DashboardMock";
+import { Reveal } from "./motion";
 
 export function Hero() {
   return (
@@ -92,16 +93,21 @@ export function Hero() {
         </div>
 
         <div className="mx-auto mt-20 max-w-4xl">
-          <div className="text-center font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+          <Reveal className="text-center font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
             Cumplimiento por diseño
-          </div>
+          </Reveal>
           <div className="mt-5 grid grid-cols-2 items-center gap-x-8 gap-y-4 text-sm font-medium text-muted-foreground/80 sm:grid-cols-4">
             {["3 alcaldías piloto", "Ley 1581/2012", "Ley 1755/2015", "Auditoría append-only"].map(
-              (l) => (
-                <div key={l} className="flex items-center justify-center gap-2 opacity-80">
+              (l, i) => (
+                <Reveal
+                  key={l}
+                  y={12}
+                  delay={i * 80}
+                  className="flex items-center justify-center gap-2 opacity-80"
+                >
                   <span className="h-1.5 w-1.5 rounded-full bg-primary/70" />
                   {l}
-                </div>
+                </Reveal>
               ),
             )}
           </div>

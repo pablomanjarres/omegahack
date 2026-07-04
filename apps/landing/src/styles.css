@@ -248,4 +248,147 @@
     animation: scan 4s linear infinite;
     pointer-events: none;
   }
+
+  /* Tabular figures for counters/stats so widths never jitter. */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Standardised section eyebrow. */
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 1;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--primary);
+  }
+
+  /* Fluid, refined display scale for section headings. */
+  .text-display {
+    font-size: clamp(2.15rem, 1.35rem + 2.9vw, 3.15rem);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+  }
+
+  /* Elevated glass console for data panels. */
+  .panel-glass {
+    background:
+      linear-gradient(180deg, color-mix(in oklab, white 5%, transparent), transparent 32%),
+      color-mix(in oklab, var(--surface) 72%, transparent);
+    backdrop-filter: blur(16px) saturate(135%);
+    -webkit-backdrop-filter: blur(16px) saturate(135%);
+    border: 1px solid var(--hairline);
+    box-shadow:
+      0 1px 0 0 color-mix(in oklab, white 7%, transparent) inset,
+      0 40px 90px -50px rgb(0 0 0 / 0.75);
+  }
+
+  /* One-shot traveling light sweep on hover (glass glide). */
+  .sheen {
+    position: relative;
+    overflow: hidden;
+  }
+  .sheen::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      115deg,
+      transparent 32%,
+      color-mix(in oklab, white 10%, transparent) 48%,
+      transparent 62%
+    );
+    transform: translateX(-120%);
+    transition: transform 0.9s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    pointer-events: none;
+  }
+  .sheen:hover::after {
+    transform: translateX(120%);
+  }
+}
+
+/* ============================================================
+   Scroll choreography + institutional depth (presentation only)
+   ------------------------------------------------------------
+   Base (no `.reveal-ready`, i.e. JS off / pre-hydration) keeps
+   everything visible. JS adds `.reveal-ready` to <html>; only
+   then do `[data-reveal]` elements hide until `.is-visible`.
+   All of it is gated behind prefers-reduced-motion.
+   ============================================================ */
+@media (prefers-reduced-motion: no-preference) {
+  .reveal-ready [data-reveal] {
+    transition-property: opacity, transform;
+    transition-duration: 0.7s;
+    transition-timing-function: cubic-bezier(0.16, 0.84, 0.3, 1);
+    transition-delay: var(--reveal-delay, 0ms);
+    will-change: opacity, transform;
+  }
+  .reveal-ready [data-reveal]:not(.is-visible) {
+    opacity: 0;
+    transform: translate3d(0, var(--reveal-y, 22px), 0);
+  }
+
+  /* Bars that fill from 0 → their width when their panel reveals. */
+  .reveal-ready [data-reveal] .bar-fill {
+    transition: width 1s cubic-bezier(0.22, 0.75, 0.2, 1);
+    transition-delay: calc(140ms + var(--bar-i, 0) * 90ms);
+  }
+  .reveal-ready [data-reveal]:not(.is-visible) .bar-fill {
+    width: 0 !important;
+  }
+}
+
+/* Subtle drifting aurora — depth behind the marketing surface. */
+.aurora {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      38% 44% at 18% 14%,
+      color-mix(in oklab, var(--primary) 16%, transparent),
+      transparent 72%
+    ),
+    radial-gradient(
+      32% 40% at 84% 22%,
+      color-mix(in oklab, var(--chart-2) 13%, transparent),
+      transparent 74%
+    ),
+    radial-gradient(
+      48% 54% at 66% 84%,
+      color-mix(in oklab, var(--primary) 11%, transparent),
+      transparent 76%
+    );
+  filter: blur(60px) saturate(120%);
+  opacity: 0.5;
+  animation: aurora-drift 28s ease-in-out infinite alternate;
+}
+@keyframes aurora-drift {
+  0% {
+    transform: translate3d(-1.5%, -1%, 0) scale(1.05) rotate(0deg);
+  }
+  50% {
+    transform: translate3d(2%, 1.5%, 0) scale(1.12) rotate(1.4deg);
+  }
+  100% {
+    transform: translate3d(-0.5%, 2%, 0) scale(1.07) rotate(-1deg);
+  }
+}
+
+/* Collapse all decorative motion for reduced-motion users. */
+@media (prefers-reduced-motion: reduce) {
+  .aurora,
+  .float-slow,
+  .scan-line {
+    animation: none !important;
+  }
+  .sheen::after {
+    transition: none;
+  }
+  [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
 }

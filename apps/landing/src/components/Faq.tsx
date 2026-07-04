@@ -4,6 +4,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Reveal } from "./motion";
 
 const ITEMS = [
   {
@@ -37,34 +38,38 @@ export function Faq() {
     <section id="faq" className="relative py-24 md:py-32">
       <div className="mx-auto max-w-3xl px-6">
         <div className="text-center">
-          <div className="font-mono text-[11px] uppercase tracking-[0.2em] text-primary">
-            // preguntas frecuentes
-          </div>
-          <h2 className="mt-3 text-balance text-4xl font-semibold tracking-tight md:text-5xl">
+          <Reveal className="eyebrow">// preguntas frecuentes</Reveal>
+          <Reveal
+            as="h2"
+            delay={60}
+            className="mt-3 text-balance text-display font-semibold tracking-tight"
+          >
             Lo que preguntan <span className="font-serif-italic text-primary">los CTOs.</span>
-          </h2>
+          </Reveal>
         </div>
 
-        <Accordion
-          type="single"
-          collapsible
-          className="mt-12 rounded-2xl border border-hairline bg-surface/60 px-6"
-        >
-          {ITEMS.map((it, i) => (
-            <AccordionItem
-              key={it.q}
-              value={`item-${i}`}
-              className={i === ITEMS.length - 1 ? "border-b-0" : ""}
-            >
-              <AccordionTrigger className="py-5 text-left text-base font-medium tracking-tight text-foreground hover:no-underline">
-                {it.q}
-              </AccordionTrigger>
-              <AccordionContent className="pb-5 text-sm leading-relaxed text-muted-foreground">
-                {it.a}
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
+        <Reveal delay={80} className="mt-12">
+          <Accordion
+            type="single"
+            collapsible
+            className="rounded-2xl border border-hairline bg-surface/60 px-6"
+          >
+            {ITEMS.map((it, i) => (
+              <AccordionItem
+                key={it.q}
+                value={`item-${i}`}
+                className={i === ITEMS.length - 1 ? "border-b-0" : ""}
+              >
+                <AccordionTrigger className="py-5 text-left text-base font-medium tracking-tight text-foreground hover:no-underline">
+                  {it.q}
+                </AccordionTrigger>
+                <AccordionContent className="pb-5 text-sm leading-relaxed text-muted-foreground">
+                  {it.a}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </Reveal>
       </div>
     </section>
   );
